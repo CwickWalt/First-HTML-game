@@ -1,88 +1,120 @@
-var gameOn = false;
+//boolean for checking key press (used for game inputs)
+var rightKey = false,
+	leftKey = false,
+	upKey = false,
+	downKey = false;
+//boolean for pausing game
+var gamePaused = false;
+var canvas,
+	ctx,
+	width = document.documentElement.clientWidth * 0.80,
+	height = document.documentElement.clientHeight * 0.30,
+	//player-controlled object
+	person = {
+		x: 25,
+		y: height - 50,
+		w: 25,
+		h: 50
+	};
+var enemyTotal = 5,
+	enemies = [],
+	enemy = {
+		x: 850,
+		y: height - 50,
+		w: 25,
+		h: 50,
+		speed: 3
+	};
 
-var myGameArea = {
-    canvas :document.createElement("canvas"),
-    start : function() {
-        this.canvas.width = 480;
-        this.canvas.height = 270;
-        this.context = this.canvas.getContext("2d");
-        this.canvas.setAttribute("id", "game-area");
-        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
-    }
+for(var i = 0; i < enemyTotal; i++) {
+	enemies.push(enemy);
 }
-
-var startButton = document.getElementById("start-game");
-
-if(!gameOn) {
-	startButtonFunction();
-}
-
-if(gameOn === true) {
-	closeButton.addEventListener("click", function() {
-		closeGame();
-		changeBoolean();
-
-
-	});
-}
-
 //functions
 
 //creates canvas element
+
 function startGame() {
-    myGameArea.start();
+    canvas = document.getElementById("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    ctx = canvas.getContext("2d");
+    id = setInterval(gameLoop, 25);
+    //add event listeners for keys being pressed and keys being released
+    document.addEventListener("keydown", keyDown, false);
+    document.addEventListener("keyup", keyUp, false);
 }
 
-//toggles boolean value when function is called
-function changeBoolean() {
-	gameOn = !gameOn;
+function clearCanvas() {
+	ctx.clearRect(0,0,width,height);
 }
 
-//adds onclick event to start button. It calls myGameArea.start() and changeBoolean().
-function startButtonFunction() {
-	startButton.addEventListener("click", function() {
-	startGame();
-	changeBoolean();
-	startButton.style.display = "none";
-
-	//when startButton is clicked, create three new buttons "pause", "refresh", and "close"
-	//I COULD create these buttons in the html, then toggle display hide/inline using JS. Possibly a cleaner way?
-
-	var pauseButton = document.createElement("button");
-	var text1 = document.createTextNode("Pause");
-	pauseButton.appendChild(text1);
-	document.querySelector("p").appendChild(pauseButton);
-	//I want the pause button to freeze the game
-	//Then, i want to replace "pause" with "Continue"
-	//next, i give the button a new function (may have to use booleans for this)
-	//finally, toggle the functions for pause and continue
-
-	var refreshButton = document.createElement("button");
-	var text2 = document.createTextNode("Refresh");
-	refreshButton.appendChild(text2);
-	document.querySelector("p").appendChild(refreshButton);
-	//I want the refresh button to start the game from the beginning
-
-	var closeButton = document.createElement("button");
-	var text3 = document.createTextNode("Close");
-	closeButton.appendChild(text3);
-	document.querySelector("p").appendChild(closeButton);
-	//adds onclick event listener to close button that calls closeGame() and changeBoolean() functions.
-	closeButton.addEventListener("click", function() {
-		closeGame();
-		changeBoolean();
-
-//removes the 3 previously created buttons and shows start button. Also removes canvas element. This has to be defined inside the startButtonFunction function because the 3 buttons only exist here.
-		function closeGame() {
-	document.querySelector("canvas").remove();
-	pauseButton.remove();
-	refreshButton.remove();
-	closeButton.remove();
-
-	// this shows the start button
-
-	startButton.style.display = "inline";
+function drawPerson() {
+	//controls movement of person
+	if(rightKey) {
+		person.x += 5;
 	}
-});
-})
+	else if(leftKey) {
+		person.x -= 5;
+	}
+	if(upKey && person.y == (height - 50)) {
+		setTimeout(function() { person.y -= 40;}, 25);
+	}
+	if(person.y < (height - 50)) {
+		person.y += 5;
+	}
+	if(person.x <= 0) {
+		person.x = 0;
+	}
+	if((person.x + person.w) >= width) {
+		person.x = width - person.w;
+	}
+	if(person.y <= 0) {
+		person.y = 0;
+	}
+	ctx.fillStyle = "green";
+	ctx.fillRect(person.x, person.y, person.w, person.h);
 }
+//creates enemies
+
+function drawEnemies() {
+	for(var i = 0; i < enemies.length; i++) {
+		ctx.fillStyle = "red";
+		ctx.fillRect(enemies[i].x, enemies[i].y, enemy.w, enemy.h);
+	}
+}
+
+//moves enemies
+
+function moveEnemies() {
+	for(var i = 0; i < enemies.length; i++) {
+		if(enemies[i].x > 0) {
+			enemies[i].x -= 1;
+		}else if(enemies[i].x <= 0) {
+			enemies[i].x = 850;
+		}
+	}
+}
+function gameLoop() {
+	clearCanvas();
+	moveEnemies();
+	drawEnemies();
+	drawPerson();
+}
+
+function keyDown(e) {
+  if (e.keyCode == 39) rightKey = true;
+  else if (e.keyCode == 37) leftKey = true;
+  if (e.keyCode == 38) upKey = true;
+  else if (e.keyCode == 40) downKey = true;
+}
+
+function keyUp(e) {
+  if (e.keyCode == 39) rightKey = false;
+  else if (e.keyCode == 37) leftKey = false;
+  if (e.keyCode == 38) upKey = false;
+  else if (e.keyCode == 40) downKey = false;
+}
+
+//startGame() function called when window loads.
+
+window.onload = startGame;
